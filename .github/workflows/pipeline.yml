@@ -13,7 +13,7 @@
    pull_request:
      branches: [master]
 
- name: DE project `dockerized-flask` CI on ECR
+ name: DE project `dockerized-flask` CI 
 
  jobs:
    pipeline:
