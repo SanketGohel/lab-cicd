@@ -1,80 +1,80 @@
-# This workflow will build and push a new container image to Amazon ECR
-#
-# To use this workflow, you will need to complete the following set-up steps:
-#
-# 1. Create an ECR repository to store your images.
-#    For example: `aws ecr create-repository --repository-name my-ecr-repo --region us-east-2`.
-#    Replace the value of `ECR_REPOSITORY` in the workflow below with your repository's name.
-#    Replace the value of `aws-region` in the workflow below with your repository's region.
+# # This workflow will build and push a new container image to Amazon ECR
+# #
+# # To use this workflow, you will need to complete the following set-up steps:
+# #
+# # 1. Create an ECR repository to store your images.
+# #    For example: `aws ecr create-repository --repository-name my-ecr-repo --region us-east-2`.
+# #    Replace the value of `ECR_REPOSITORY` in the workflow below with your repository's name.
+# #    Replace the value of `aws-region` in the workflow below with your repository's region.
 
-on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+ on:
+   push:
+     branches: [master]
+   pull_request:
+     branches: [master]
 
-name: Flask project `dockerized-flask` CI on ECR
+ name: DE project `dockerized-flask` CI on ECR
 
-jobs:
-  pipeline:
-    name: Pipeline
-    runs-on: ubuntu-latest
+ jobs:
+   pipeline:
+     name: Pipeline
+     runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+     steps:
+     - name: Checkout
+       uses: actions/checkout@v2
 
-    - name: Build Test Image
-      run:
-        make build
+     - name: Build Test Image
+       run:
+         make build
 
-    - name: Test
-      run:
-        make unit
+     - name: Test
+       run:
+         make unit
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
+#     - name: Configure AWS credentials
+#       uses: aws-actions/configure-aws-credentials@v1
+#       with:
+#         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#         aws-region: us-east-1
 
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+#     - name: Login to Amazon ECR
+#       id: login-ecr
+#       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: dockerized-flask
-        IMAGE_TAG: latest
-      run: |
-        # Build a docker container and push it to ECR
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        echo "Pushing image to ECR..."
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+#     - name: Build, tag, and push image to Amazon ECR
+#       id: build-image
+#       env:
+#         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#         ECR_REPOSITORY: dockerized-flask
+#         IMAGE_TAG: latest
+#       run: |
+#         # Build a docker container and push it to ECR
+#         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+#         echo "Pushing image to ECR..."
+#         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+#         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-    - name: Sleep
-      run:
-        sleep 10
+#     - name: Sleep
+#       run:
+#         sleep 10
 
-    - name: Fill in the new image ID in the Amazon ECS task definition
-      id: task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: task-definition.json
-        container-name: sample-app-container
-        image: ${{ steps.build-image.outputs.image }}
+#     - name: Fill in the new image ID in the Amazon ECS task definition
+#       id: task-def
+#       uses: aws-actions/amazon-ecs-render-task-definition@v1
+#       with:
+#         task-definition: task-definition.json
+#         container-name: sample-app-container
+#         image: ${{ steps.build-image.outputs.image }}
 
-    - name: Deploy Amazon ECS task definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: dockerized-flask-app
-        cluster: sample-cluster
-        wait-for-service-stability: true
+#     - name: Deploy Amazon ECS task definition
+#       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+#       with:
+#         task-definition: ${{ steps.task-def.outputs.task-definition }}
+#         service: dockerized-flask-app
+#         cluster: sample-cluster
+#         wait-for-service-stability: true
 
 
 
